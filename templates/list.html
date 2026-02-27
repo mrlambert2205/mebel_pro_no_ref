@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Товары на складе</h2>
+    <div class="btn-group">
+        <a href="{% url 'inbound' %}" class="btn btn-success">Принять товар</a>
+        <a href="{% url 'outbound' %}" class="btn btn-danger">Списать/Продать</a>
+    </div>
+</div>
+
+<table class="table table-striped table-hover mt-3">
+    <thead class="table-dark">
+        <tr>
+            <th>Артикул</th>
+            <th>Название</th>
+            <th>Категория</th>
+            <th>Остаток</th>
+            <th>Цена прод.</th>
+            <th>Статус</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in products %}
+        <tr>
+            <td><code>{{ p.sku }}</code></td>
+            <td>{{ p.name }}</td>
+            <td>{{ p.category.name }}</td>
+            <td><strong>{{ p.quantity }}</strong></td>
+            <td>{{ p.price_sale }} тг.</td>
+            <td>
+                {% if p.quantity <= p.min_limit %}
+                    <span class="badge bg-danger">Мало</span>
+                {% else %}
+                    <span class="badge bg-success">ОК</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

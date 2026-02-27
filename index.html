@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Қойма Басқару Жүйесі - Рефакторингке дейін</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: #333;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #48c774;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffdd57;
+            color: rgba(0,0,0,0.7);
+        }
+
+        .btn-danger {
+            background: #f14668;
+            color: white;
+        }
+
+        .search-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .tables-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .table-section {
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .table-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .action-link {
+            color: #667eea;
+            cursor: pointer;
+            margin: 0 5px;
+            text-decoration: underline;
+        }
+
+        .action-link.delete {
+            color: #f14668;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            animation: slideIn 0.3s ease;
+            z-index: 2000;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification.success {
+            background: #48c774;
+        }
+
+        .notification.error {
+            background: #f14668;
+        }
+
+        .notification.info {
+            background: #3298dc;
+        }
+
+        .price-calculator {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .price-calculator h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .price-display {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏭 Қойма Басқару Жүйесі</h1>
+            <p>Рефакторингке дейін - Монолиттік нұсқа</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Статистика -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Барлық өнімдер</h3>
+                    <div class="number" id="totalProducts">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Барлық санаттар</h3>
+                    <div class="number" id="totalCategories">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Жалпы құн</h3>
+                    <div class="number" id="totalValue">₸0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Аз қалған тауарлар</h3>
+                    <div class="number" id="lowStockItems">0</div>
+                </div>
+            </div>
+
+            <!-- Әрекет түймелері -->
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="showModal('product')">➕ Өнім қосу</button>
+                <button class="btn btn-primary" onclick="showModal('category')">📁 Санат қосу</button>
+                <button class="btn btn-success" onclick="generateReport()">📊 Есеп дайындау</button>
+                <button class="btn btn-warning" onclick="applyBulkDiscount()">🏷️ Жаппай жеңілдік</button>
+                <button class="btn btn-warning" onclick="calculateInventoryValue()">💰 Құнды есептеу</button>
+                <button class="btn btn-danger" onclick="clearAllData()">🗑️ Барлығын тазалау</button>
+            </div>
+
+            <!-- Іздеу секциясы -->
+            <div class="search-section">
+                <input type="text" class="search-input" id="searchInput" placeholder="Өнімдерді аты, санаты немесе сипаттамасы бойынша іздеу..." onkeyup="searchProducts()">
+                <select class="search-input" id="categoryFilter" onchange="filterByCategory()">
+                    <option value="">Барлық санаттар</option>
+                </select>
+            </div>
+
+            <!-- Кестелер -->
+            <div class="tables-container">
+                <div class="table-section">
+                    <h2>📦 Өнімдер</h2>
+                    <table id="productsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Аты</th>
+                                <th>Санаты</th>
+                                <th>Бағасы</th>
+                                <th>Саны</th>
+                                <th>Әрекеттер</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="table-section">
+                    <h2>📁 Санаттар</h2>
+                    <table id="categoriesTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Аты</th>
+                                <th>Сипаттамасы</th>
+                                <th>Әрекеттер</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriesBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Баға калькуляторы -->
+            <div class="price-calculator">
+                <h3>💰 Баға калькуляторы (Стратегия паттерні - Рефакторингке дейін)</h3>
+                <div class="form-group">
+                    <label>Негізгі баға:</label>
+                    <input type="number" id="basePrice" value="100" onchange="calculatePrice()">
+                </div>
+                <div class="form-group">
+                    <label>Жеңілдік түрі:</label>
+                    <select id="discountType" onchange="calculatePrice()">
+                        <option value="none">Жеңілдіксіз</option>
+                        <option value="regular">Кәдімгі (10%)</option>
+                        <option value="premium">Премиум (20%)</option>
+                        <option value="vip">VIP (30%)</option>
+                        <option value="seasonal">Маусымдық (15%)</option>
+                        <option value="clearance">Тазарту (40%)</option>
+                    </select>
+                </div>
+                <div class="price-display" id="calculatedPrice">₸100.00</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Өнім модалы -->
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <h2 id="productModalTitle">Өнім қосу</h2>
+            <form id="productForm" onsubmit="event.preventDefault(); saveProduct();">
+                <input type="hidden" id="productId">
+                <div class="form-group">
+                    <label>Өнім аты:</label>
+                    <input type="text" id="productName" required>
+                </div>
+                <div class="form-group">
+                    <label>Санаты:</label>
+                    <select id="productCategory" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Бағасы (₸):</label>
+                    <input type="number" id="productPrice" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Саны:</label>
+                    <input type="number" id="productQuantity" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label>Сипаттамасы:</label>
+                    <textarea id="productDescription"></textarea>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-danger" onclick="closeModal('product')">Болдырмау</button>
+                    <button type="submit" class="btn btn-success">Сақтау</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Санат модалы -->
+    <div class="modal" id="categoryModal">
+        <div class="modal-content">
+            <h2 id="categoryModalTitle">Санат қосу</h2>
+            <form id="categoryForm" onsubmit="event.preventDefault(); saveCategory();">
+                <input type="hidden" id="categoryId">
+                <div class="form-group">
+                    <label>Санат аты:</label>
+                    <input type="text" id="categoryName" required>
+                </div>
+                <div class="form-group">
+                    <label>Сипаттамасы:</label>
+                    <textarea id="categoryDescription"></textarea>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-danger" onclick="closeModal('category')">Болдырмау</button>
+                    <button type="submit" class="btn btn-success">Сақтау</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Жаһандық айнымалылар - рефакторингке дейінгі жаман тәжірибе
+        let products = [];
+        let categories = [];
+        let nextProductId = 1;
+        let nextCategoryId = 1;
+        let notificationTimeout = null;
+
+        // Бастапқы деректермен инициализациялау
+        function initData() {
+            // Үлгі санаттар
+            categories = [
+                { id: 1, name: 'Электроника', description: 'Электронды құрылғылар мен гаджеттер' },
+                { id: 2, name: 'Жиһаз', description: 'Үй және кеңсе жиһазы' },
+                { id: 3, name: 'Киім', description: 'Киімдер мен аксессуарлар' }
+            ];
+            nextCategoryId = 4;
+
+            // Үлгі өнімдер
+            products = [
+                { id: 1, name: 'Ноутбук', categoryId: 1, price: 450000, quantity: 10, description: 'Жоғары өнімді ноутбук' },
+                { id: 2, name: 'Кеңсе орны', categoryId: 2, price: 85000, quantity: 5, description: 'Эргономикалық кеңсе орны' },
+                { id: 3, name: 'Футболка', categoryId: 3, price: 5000, quantity: 50, description: 'Мақта футболка' }
+            ];
+            nextProductId = 4;
+
+            updateAllDisplays();
+        }
+
+        // Өнімдерге арналған CRUD операциялары
+        function getAllProducts() {
+            return products.map(product => {
+                const category = categories.find(c => c.id === product.categoryId);
+                return {
+                    ...product,
+                    categoryName: category ? category.name : 'Белгісіз'
+                };
+            });
+        }
+
+        function getProductById(id) {
+            return products.find(p => p.id === parseInt(id));
+        }
+
+        function createProduct(productData) {
+            const newProduct = {
+                id: nextProductId++,
+                ...productData,
+                categoryId: parseInt(productData.categoryId)
+            };
+            products.push(newProduct);
+            showNotification('Өнім сәтті қосылды!', 'success');
+            updateAllDisplays();
+            return newProduct;
+        }
+
+        function updateProduct(id, productData) {
+            const index = products.findIndex(p => p.id === parseInt(id));
+            if (index !== -1) {
+                products[index] = {
+                    ...products[index],
+                    ...productData,
+                    categoryId: parseInt(productData.categoryId)
+                };
+                showNotification('Өнім сәтті жаңартылды!', 'success');
+                updateAllDisplays();
+                return products[index];
+            }
+            return null;
+        }
+
+        function deleteProduct(id) {
+            const index = products.findIndex(p => p.id === parseInt(id));
+            if (index !== -1) {
+                products.splice(index, 1);
+                showNotification('Өнім сәтті жойылды!', 'success');
+                updateAllDisplays();
+                return true;
+            }
+            return false;
+        }
+
+        // Санаттарға арналған CRUD операциялары
+        function getAllCategories() {
+            return categories;
+        }
+
+        function getCategoryById(id) {
+            return categories.find(c => c.id === parseInt(id));
+        }
+
+        function createCategory(categoryData) {
+            const newCategory = {
+                id: nextCategoryId++,
+                ...categoryData
+            };
+            categories.push(newCategory);
+            showNotification('Санат сәтті қосылды!', 'success');
+            updateAllDisplays();
+            return newCategory;
+        }
+
+        function updateCategory(id, categoryData) {
+            const index = categories.findIndex(c => c.id === parseInt(id));
+            if (index !== -1) {
+                categories[index] = {
+                    ...categories[index],
+                    ...categoryData
+                };
+                showNotification('Санат сәтті жаңартылды!', 'success');
+                updateAllDisplays();
+                return categories[index];
+            }
+            return null;
+        }
+
+        function deleteCategory(id) {
+            // Санатта өнімдер бар ма тексереміз
+            const hasProducts = products.some(p => p.categoryId === parseInt(id));
+            if (hasProducts) {
+                showNotification('Өнімдері бар санатты жою мүмкін емес!', 'error');
+                return false;
+            }
+
+            const index = categories.findIndex(c => c.id === parseInt(id));
+            if (index !== -1) {
+                categories.splice(index, 1);
+                showNotification('Санат сәтті жойылды!', 'success');
+                updateAllDisplays();
+                return true;
+            }
+            return false;
+        }
+
+        // Бизнес логика 1: Қойманың жалпы құнын есептеу
+        function calculateTotalInventoryValue() {
+            let total = 0;
+            for (let i = 0; i < products.length; i++) {
+                total += products[i].price * products[i].quantity;
+            }
+            return total;
+        }
+
+        // Бизнес логика 2: Аз қалған өнімдерді тексеру
+        function getLowStockItems(threshold = 10) {
+            const lowStock = [];
+            for (let i = 0; i < products.length; i++) {
+                if (products[i].quantity < threshold) {
+                    const category = getCategoryById(products[i].categoryId);
+                    lowStock.push({
+                        ...products[i],
+                        categoryName: category ? category.name : 'Белгісіз'
+                    });
+                }
+            }
+            return lowStock;
+        }
+
+        // Бизнес логика 3: Жаппай жеңілдік қолдану
+        function applyBulkDiscount(discountPercent = 10, categoryId = null) {
+            for (let i = 0; i < products.length; i++) {
+                if (!categoryId || products[i].categoryId === parseInt(categoryId)) {
+                    products[i].price = products[i].price * (1 - discountPercent / 100);
+                }
+            }
+            showNotification(`${discountPercent}% жеңілдік қолданылды!`, 'success');
+            updateAllDisplays();
+        }
+
+        // Стратегия паттерні (Рефакторингке дейін)
+        function calculatePriceWithDiscount(basePrice, discountType) {
+            switch(discountType) {
+                case 'regular':
+                    return basePrice * 0.9; // 10% жеңілдік
+                case 'premium':
+                    return basePrice * 0.8; // 20% жеңілдік
+                case 'vip':
+                    return basePrice * 0.7; // 30% жеңілдік
+                case 'seasonal':
+                    return basePrice * 0.85; // 15% жеңілдік
+                case 'clearance':
+                    return basePrice * 0.6; // 40% жеңілдік
+                default:
+                    return basePrice;
+            }
+        }
+
+        function calculatePrice() {
+            const basePrice = parseFloat(document.getElementById('basePrice').value) || 0;
+            const discountType = document.getElementById('discountType').value;
+            const finalPrice = calculatePriceWithDiscount(basePrice, discountType);
+            document.getElementById('calculatedPrice').textContent = `₸${finalPrice.toFixed(2)}`;
+        }
+
+        // Фасад паттерні (Рефакторингке дейін)
+        function generateReport() {
+            // Бұл бірнеше операцияларды біріктіретін фасад
+            const totalValue = calculateTotalInventoryValue();
+            const lowStock = getLowStockItems(10);
+            const categories = getAllCategories();
+            const productsByCategory = {};
+
+            // Өнімдерді санат бойынша топтау
+            for (let i = 0; i < categories.length; i++) {
+                productsByCategory[categories[i].name] = [];
+            }
+
+            for (let i = 0; i < products.length; i++) {
+                const category = getCategoryById(products[i].categoryId);
+                if (category) {
+                    if (!productsByCategory[category.name]) {
+                        productsByCategory[category.name] = [];
+                    }
+                    productsByCategory[category.name].push(products[i]);
+                }
+            }
+
+            // Есеп мәтінін дайындау
+            let report = '📊 ҚОЙМА ЕСЕБІ\n';
+            report += '==================\n\n';
+            report += `Жалпы қойма құны: ₸${totalValue.toFixed(2)}\n`;
+            report += `Барлық өнімдер: ${products.length}\n`;
+            report += `Барлық санаттар: ${categories.length}\n`;
+            report += `Аз қалған тауарлар: ${lowStock.length}\n\n`;
+            
+            report += 'САНАТ БОЙЫНША ӨНІМДЕР:\n';
+            for (let category in productsByCategory) {
+                report += `\n${category}:\n`;
+                if (productsByCategory[category].length > 0) {
+                    for (let i = 0; i < productsByCategory[category].length; i++) {
+                        const p = productsByCategory[category][i];
+                        report += `  - ${p.name}: ₸${p.price} (${p.quantity} дана)\n`;
+                    }
+                } else {
+                    report += '  Өнімдер жоқ\n';
+                }
+            }
+
+            alert(report);
+            showNotification('Есеп дайындалды!', 'info');
+        }
+
+        // UI Функциялары
+        function showModal(type) {
+            if (type === 'product') {
+                document.getElementById('productModalTitle').textContent = 'Өнім қосу';
+                document.getElementById('productForm').reset();
+                document.getElementById('productId').value = '';
+                document.getElementById('productModal').classList.add('active');
+                updateCategorySelect();
+            } else {
+                document.getElementById('categoryModalTitle').textContent = 'Санат қосу';
+                document.getElementById('categoryForm').reset();
+                document.getElementById('categoryId').value = '';
+                document.getElementById('categoryModal').classList.add('active');
+            }
+        }
+
+        function closeModal(type) {
+            document.getElementById(`${type}Modal`).classList.remove('active');
+        }
+
+        function updateCategorySelect() {
+            const select = document.getElementById('productCategory');
+            select.innerHTML = '';
+            for (let i = 0; i < categories.length; i++) {
+                const option = document.createElement('option');
+                option.value = categories[i].id;
+                option.textContent = categories[i].name;
+                select.appendChild(option);
+            }
+        }
+
+        function updateFilterSelect() {
+            const filter = document.getElementById('categoryFilter');
+            filter.innerHTML = '<option value="">Барлық санаттар</option>';
+            for (let i = 0; i < categories.length; i++) {
+                const option = document.createElement('option');
+                option.value = categories[i].id;
+                option.textContent = categories[i].name;
+                filter.appendChild(option);
+            }
+        }
+
+        function saveProduct() {
+            const productData = {
+                name: document.getElementById('productName').value,
+                categoryId: document.getElementById('productCategory').value,
+                price: parseFloat(document.getElementById('productPrice').value),
+                quantity: parseInt(document.getElementById('productQuantity').value),
+                description: document.getElementById('productDescription').value
+            };
+
+            const productId = document.getElementById('productId').value;
+            
+            if (productId) {
+                updateProduct(productId, productData);
+            } else {
+                createProduct(productData);
+            }
+
+            closeModal('product');
+        }
+
+        function saveCategory() {
+            const categoryData = {
+                name: document.getElementById('categoryName').value,
+                description: document.getElementById('categoryDescription').value
+            };
+
+            const categoryId = document.getElementById('categoryId').value;
+            
+            if (categoryId) {
+                updateCategory(categoryId, categoryData);
+            } else {
+                createCategory(categoryData);
+            }
+
+            closeModal('category');
+        }
+
+        function editProduct(id) {
+            const product = getProductById(id);
+            if (product) {
+                document.getElementById('productModalTitle').textContent = 'Өнімді өңдеу';
+                document.getElementById('productId').value = product.id;
+                document.getElementById('productName').value = product.name;
+                document.getElementById('productPrice').value = product.price;
+                document.getElementById('productQuantity').value = product.quantity;
+                document.getElementById('productDescription').value = product.description || '';
+                
+                updateCategorySelect();
+                document.getElementById('productCategory').value = product.categoryId;
+                document.getElementById('productModal').classList.add('active');
+            }
+        }
+
+        function editCategory(id) {
+            const category = getCategoryById(id);
+            if (category) {
+                document.getElementById('categoryModalTitle').textContent = 'Санатты өңдеу';
+                document.getElementById('categoryId').value = category.id;
+                document.getElementById('categoryName').value = category.name;
+                document.getElementById('categoryDescription').value = category.description || '';
+                document.getElementById('categoryModal').classList.add('active');
+            }
+        }
+
+        function renderProducts() {
+            const tbody = document.getElementById('productsBody');
+            const allProducts = getAllProducts();
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const categoryFilter = document.getElementById('categoryFilter').value;
+
+            const filteredProducts = allProducts.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(searchTerm) ||
+                                     p.categoryName.toLowerCase().includes(searchTerm) ||
+                                     (p.description && p.description.toLowerCase().includes(searchTerm));
+                const matchesCategory = !categoryFilter || p.categoryId === parseInt(categoryFilter);
+                return matchesSearch && matchesCategory;
+            });
+
+            tbody.innerHTML = '';
+            for (let i = 0; i < filteredProducts.length; i++) {
+                const p = filteredProducts[i];
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${p.id}</td>
+                    <td>${p.name}</td>
+                    <td>${p.categoryName}</td>
+                    <td>₸${p.price.toFixed(2)}</td>
+                    <td style="color: ${p.quantity < 10 ? '#f14668' : 'inherit'}">${p.quantity}</td>
+                    <td>
+                        <span class="action-link" onclick="editProduct(${p.id})">Өңдеу</span>
+                        <span class="action-link delete" onclick="deleteProduct(${p.id})">Жою</span>
+                    </td>
+                `;
+            }
+        }
+
+        function renderCategories() {
+            const tbody = document.getElementById('categoriesBody');
+            tbody.innerHTML = '';
+            for (let i = 0; i < categories.length; i++) {
+                const c = categories[i];
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${c.id}</td>
+                    <td>${c.name}</td>
+                    <td>${c.description || ''}</td>
+                    <td>
+                        <span class="action-link" onclick="editCategory(${c.id})">Өңдеу</span>
+                        <span class="action-link delete" onclick="deleteCategory(${c.id})">Жою</span>
+                    </td>
+                `;
+            }
+        }
+
+        function updateStatistics() {
+            document.getElementById('totalProducts').textContent = products.length;
+            document.getElementById('totalCategories').textContent = categories.length;
+            document.getElementById('totalValue').textContent = `₸${calculateTotalInventoryValue().toFixed(2)}`;
+            document.getElementById('lowStockItems').textContent = getLowStockItems().length;
+        }
+
+        function updateAllDisplays() {
+            renderProducts();
+            renderCategories();
+            updateStatistics();
+            updateFilterSelect();
+            updateCategorySelect();
+        }
+
+        function showNotification(message, type) {
+            if (notificationTimeout) {
+                clearTimeout(notificationTimeout);
+                const oldNotification = document.querySelector('.notification');
+                if (oldNotification) oldNotification.remove();
+            }
+
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            notificationTimeout = setTimeout(() => {
+                notification.remove();
+                notificationTimeout = null;
+            }, 3000);
+        }
+
+        function searchProducts() {
+            renderProducts();
+        }
+
+        function filterByCategory() {
+            renderProducts();
+        }
+
+        function clearAllData() {
+            if (confirm('Барлық деректерді тазалауға сенімдісіз бе? Бұл әрекетті қайтару мүмкін емес!')) {
+                products = [];
+                categories = [];
+                nextProductId = 1;
+                nextCategoryId = 1;
+                showNotification('Барлық деректер тазаланды!', 'info');
+                updateAllDisplays();
+            }
+        }
+
+        function calculateInventoryValue() {
+            const total = calculateTotalInventoryValue();
+            showNotification(`Қойманың жалпы құны: ₸${total.toFixed(2)}`, 'info');
+        }
+
+        // Қолданбаны инициализациялау
+        initData();
+    </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-clock-history"></i> Журнал всех операций</h2>
+    <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+        <i class="bi bi-printer"></i> Печать отчета
+    </button>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle shadow-sm">
+        <thead class="table-light">
+            <tr>
+                <th>Дата и время</th>
+                <th>Тип операции</th>
+                <th>Объект</th>
+                <th>Кол-во</th>
+                <th>Партнер</th>
+                <th>Сотрудник</th>
+                <th>Комментарий</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for trans in transactions %}
+            <tr>
+                <td class="small text-muted">{{ trans.date|date:"d.m.Y H:i" }}</td>
+                <td>
+                    {% if trans.type == 'INBOUND' %}
+                        <span class="badge bg-success-subtle text-success border border-success">Закупка</span>
+                    {% elif trans.type == 'OUTBOUND' %}
+                        <span class="badge bg-primary-subtle text-primary border border-primary">Продажа</span>
+                    {% elif trans.type == 'PROD_IN' %}
+                        <span class="badge bg-warning-subtle text-dark border border-warning">Выпуск мебели</span>
+                    {% elif trans.type == 'PROD_OUT' %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger">Списание в цех</span>
+                    {% endif %}
+                </td>
+                <td><strong>{{ trans.item.name }}</strong> <br><small class="text-muted">{{ trans.item.sku }}</small></td>
+                <td class="fw-bold">{{ trans.quantity }} {{ trans.item.unit }}</td>
+                <td>{{ trans.contractor.name|default:"—" }}</td>
+                <td><i class="bi bi-person"></i> {{ trans.employee.username }}</td>
+                <td class="small italic text-muted">{{ trans.comment }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center py-5 text-muted">Операций пока не зафиксировано</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
